@@ -13,11 +13,10 @@ public class MLPXOR {
     public static void main(String[] args) {
         //
         final double[][] input = {
-            //{0, 0}, {0, 1}, {1, 0}, {1, 1}
-            {0}
+            {0, 0}, {0, 1}, {1, 0}, {1, 1}
         };
         final double[][] target = {
-            {1}
+                {0}, {1}, {1}, {0}
         };
         //
         final Random rnd = new Random(100L);
@@ -26,13 +25,8 @@ public class MLPXOR {
         // be deactivated using net.setBias(layer, false),
         // where layer gives the layer index (1 = the first hidden layer).
         //
-        final MultiLayerPerceptron net = new MultiLayerPerceptron(1, 100,  1);
+        final MultiLayerPerceptron net = new MultiLayerPerceptron(2, 100,  1);
 
-        //net.setBias(0,false);
-        net.setBias(1,false);
-        //net.setBias(2,false);
-        //net.setBias(3,false);
-        //net.setBias(4,false);
         //
         // perform training.
         //
