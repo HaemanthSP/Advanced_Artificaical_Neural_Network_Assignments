@@ -16,7 +16,7 @@ public class MLPXOR {
             {0, 0}, {0, 1}, {1, 0}, {1, 1}
         };
         final double[][] target = {
-                {0}, {1}, {1}, {0}
+                {1}, {1}, {1}, {1}
         };
         //
         final Random rnd = new Random(100L);
@@ -25,13 +25,13 @@ public class MLPXOR {
         // be deactivated using net.setBias(layer, false),
         // where layer gives the layer index (1 = the first hidden layer).
         //
-        final MultiLayerPerceptron net = new MultiLayerPerceptron(2, 100,  1);
+        final MultiLayerPerceptron net = new MultiLayerPerceptron(2, 2,  1);
 
         //
         // perform training.
         //
         final int epochs = 10000;         // don't change this value!
-        final double learningrate = 0.01;
+        final double learningrate = 0.001;
         final double momentumrate = 0.95;
         //
         // generate initial weights.

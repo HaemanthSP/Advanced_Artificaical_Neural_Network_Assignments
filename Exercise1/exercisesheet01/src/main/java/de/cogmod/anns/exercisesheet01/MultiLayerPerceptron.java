@@ -305,8 +305,9 @@ public class MultiLayerPerceptron {
         //
         assert(input.length == target.length);
         //
-        final double[] dweights          = new double[this.weightsnum];
-        double[] weightsupdate = new double[this.weightsnum];
+        final double[] weights = new double[this.weightsnum];
+        final double[] dweights = new double[this.weightsnum];
+        final double[] weightsupdate = new double[this.weightsnum];
         //
         //
         // create initial index permutation.
@@ -321,7 +322,6 @@ public class MultiLayerPerceptron {
         // epoch loop.
         //
         
-        final double[] weights = new double[this.weightsnum];
         this.readWeights(weights);
 
         for (int i = 0; i < epochs; i++) {
@@ -338,23 +338,26 @@ public class MultiLayerPerceptron {
             //
 
             for (int j = 0; j < input.length; j++) {
+
+                // Forwardpass
                 double[] output = forwardPass(input[indices[j]]);
+
+                // Calculate error
                 errorsum += RMSE(output, target[indices[j]]);
+
+                // Backpropagate errors through the network
                 backwardPass(target[indices[j]]);
                 this.readDWeights(dweights);
 
+                // Update weights
                 for (int u = 0; u < this.weightsnum; u++) {
                     weightsupdate[u] = -learningrate * dweights[u] + momentumrate * weightsupdate[u];
                     weights[u] += weightsupdate[u];
                 }
-
-                //
-                // Write the flat list of updated weights into proper structure
-                //
                 writeWeights(weights);
             }
 
-            //
+            // Mean error
             error = errorsum / (double)(input.length);
             if (listener != null) listener.afterEpoch(i + 1, error);
         }
