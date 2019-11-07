@@ -1,6 +1,7 @@
 package de.cogmod.anns.exercisesheet01;
 
 import java.util.Random;
+import java.util.Arrays;
 
 import de.cogmod.anns.exercisesheet01.misc.LearningListener;
 import de.cogmod.anns.exercisesheet01.misc.Tools;
@@ -27,6 +28,20 @@ public class MultiLayerPerceptron {
     private boolean[] usebias;
     private double[][][] dweights;
     
+    public void debugPrint() {
+      //for (int l = 1; l < weights.length; ++l) {
+      //  System.out.println("bias[" + l + "] = " + Arrays.toString(weights[l][weights[l].length - 1]));
+      //}
+      // for (int l = 1; l < weights.length; ++l) {
+      //   System.out.println("weights[" + l + "] = " + Arrays.deepToString(weights[l]));
+      // }
+      
+      System.out.println("weights[1][x] = " + Arrays.toString(weights[1][0]));
+      System.out.println("weights[1][y] = " + Arrays.toString(weights[1][1]));
+      System.out.println("weights[1][B] = " + Arrays.toString(weights[1][2]));
+      //throw null;
+    }
+
     private static int[] join(final int i1, final int i2, final int ...in) {
         final int[] result = new int[2 + in.length];
         //
@@ -206,17 +221,24 @@ public class MultiLayerPerceptron {
         // starting with the output layer.
         //
 
-        for (int l = this.layersnum - 1; l > 1; l--) {
+        for (int l = this.layersnum - 1; l > 0; l--) {
             final int layersize    = this.layer[l];
             final int prelayersize = this.layer[l - 1];
 
             for (int h = 0; h < prelayersize; h++) {
+                if (l > 1) {
+                  this.bwbuffer[l - 1][h] = 0;
+                }
                 for (int k = 0; k < layersize; k++) {
-                    this.bwbuffer[l - 1][h] += this.weights[l][h][k] * this.delta[l][k];
+                    if (l > 1) {
+                      this.bwbuffer[l - 1][h] += this.weights[l][h][k] * this.delta[l][k];
+                    }
                     this.dweights[l][h][k] =  (this.act[l - 1][h] * this.delta[l][k]);
                     this.dweights[l][prelayersize][k] = this.delta[l][k];
                 }
-                this.delta[l - 1][h] = this.bwbuffer[l - 1][h] * sigmoidDx(this.net[l- 1][h]);
+                if (l > 1) {
+                  this.delta[l - 1][h] = this.bwbuffer[l - 1][h] * sigmoidDx(this.net[l- 1][h]);
+                }
             }
         }
 
@@ -360,6 +382,9 @@ public class MultiLayerPerceptron {
             // Mean error
             error = errorsum / (double)(input.length);
             if (listener != null) listener.afterEpoch(i + 1, error);
+            //if ((i+1) % 200 == 0) debugPrint();
+            //if (i % 100 == 0)
+            //System.out.println("update = " + Arrays.toString(weightsupdate));
         }
         //
         return error;
@@ -387,6 +412,5 @@ public class MultiLayerPerceptron {
         //
         return Math.sqrt(error / (double)(target.length));
     }
-    
-    
+
 }
