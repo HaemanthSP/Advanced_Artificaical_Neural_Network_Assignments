@@ -31,7 +31,7 @@ public class MLPXOR {
         // perform training.
         //
         final int epochs = 10000;         // don't change this value!
-        final double learningrate = 0.001;
+        final double learningrate = 0.01;
         final double momentumrate = 0.95;
         //
         // generate initial weights.
