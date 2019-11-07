@@ -198,7 +198,7 @@ public class MultiLayerPerceptron {
         // store into "back-flowing" inputs (deltas).
         //
         for (int i = 0; i < target.length; i++) {
-            this.delta[this.layersnum - 1][i] = sigmoidDx(output[i]) * (output[i] - target[i]);
+            this.delta[this.layersnum - 1][i] = sigmoidDx(this.net[this.act.length - 1][i]) * (output[i] - target[i]);
         }
 
         //
