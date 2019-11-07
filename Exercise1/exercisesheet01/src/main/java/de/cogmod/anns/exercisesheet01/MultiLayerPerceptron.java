@@ -320,6 +320,10 @@ public class MultiLayerPerceptron {
         //
         // epoch loop.
         //
+        
+        final double[] weights = new double[this.weightsnum];
+        this.readWeights(weights);
+
         for (int i = 0; i < epochs; i++) {
             //
             // shuffle indices.
@@ -334,15 +338,14 @@ public class MultiLayerPerceptron {
             //
 
             for (int j = 0; j < input.length; j++) {
-                final double[] weights = new double[this.weightsnum];
                 double[] output = forwardPass(input[indices[j]]);
                 errorsum += RMSE(output, target[indices[j]]);
                 backwardPass(target[indices[j]]);
-                this.readWeights(weightsupdate);
                 this.readDWeights(dweights);
 
                 for (int u = 0; u < this.weightsnum; u++) {
-                    weights[u] += -learningrate * dweights[u] + momentumrate * weightsupdate[u];
+                    weightsupdate[u] = -learningrate * dweights[u] + momentumrate * weightsupdate[u];
+                    weights[u] += weightsupdate[u];
                 }
 
                 //
