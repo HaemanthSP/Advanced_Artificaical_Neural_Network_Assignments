@@ -250,6 +250,7 @@ public class RecurrentNeuralNetwork {
                         //
                         // integrate recurrent input.
                         //
+                        // Fixme: Doubt: when t == 0 | activation at layer l is empty | Its fine because of the zero initialization
                         for (int i = 0; i < layersize; i++) {
                             netjt += this.act[l][i][prevt] * fb_weights[i][j];
                         }
@@ -312,15 +313,22 @@ public class RecurrentNeuralNetwork {
         //
         // compute reversely in time.
         //
+        // System.out.println("target: " + target.length);
+        // System.out.println("steps: " + steps);
         for (int t = (steps - 1); t >= 0; t--) {
             //
             // inject the output/target discrepancy into this.bwbuffer. Note that
             // this.bwbuffer functions analogously to this.net but is used to
             // store into "back-flowing" inputs (deltas).
             //
+
+            // FIXME: Doubt | difference between t_target and t ? | So the steps and target could be of different size?
             if (t_target >= 0) {
                 for (int j = 0; j < this.delta[outputlayer].length; j++) {
                     this.bwbuffer[outputlayer][j][t] = (target[t_target][j] - this.act[outputlayer][j][t]);
+
+                    // delata is same as bwbuffer for output. Because of the linear activation for the output layer.
+                    this.delta[outputlayer][j][t] = this.bwbuffer[outputlayer][j][t];
                 }
             }
             //
@@ -328,39 +336,74 @@ public class RecurrentNeuralNetwork {
             // starting with the output layer.
             //
 
-            
-            // for ... {
-            
+            for (int l = outputlayer; l > 1; l--) {
+
+                final int layersize    = this.layer[l];
+                final int prelayersize = this.layer[l - 1];
+
                 //
                 // integrate deltas for non-output layers.
                 //
-            
-                // ...
+                for (int h = 0; h < prelayersize; h++) {
+                    for (int k = 0; k < layersize; k++) {
+                        this.bwbuffer[l-1][h][t] += this.weights[l-1][l][h][k] * this.delta[l][k][t];
+                    }
 
+                    if (t < (steps - 1)) {
+                        for (int m = 0; m < prelayersize; m++) {
+                            this.bwbuffer[l - 1][h][t] += this.weights[l - 1][l - 1][h][m] * this.delta[l - 1][m][t + 1];
+                        }
+                    }
 
-            // }
+                    this.delta[l - 1][h][t] = this.bwbuffer[l - 1][h][t] * tanhDx(this.net[l - 1][h][t]);
+                }
+            }
 
             t_target--;
         }
         // 
         // Compute the weights derivatives.
         //
-        // ... for (int l = 1; l <= outputlayer; l++) {
-       
-            //
-            // compute weights derivatives between previous layer and current layer.
-            //
-        
-            //
-            // compute weights derivatives between current layer and current layer.
-            //
 
-            //
-            // compute weights derivatives between bias and current layer.
-            //
-        //}
+        for (int l = 1; l <= outputlayer; l++) {
+
+            final int layersize    = this.layer[l];
+            final int prelayersize = this.layer[l - 1];
+
+            for (int j = 0; j < layersize; j++) {
+                for (int t = 0; t < steps; t++) {
+                    for (int i = 0; i < prelayersize; i++) {
+                        //
+                        // compute weights derivatives between previous layer and current layer.
+                        //
+                        this.dweights[l-1][l][i][j] += (this.act[l-1][i][t] * this.delta[l][j][t]);
+                    }
+
+                    for (int h = 0; h < layersize; h++) {
+                        //
+                        // compute weights derivatives between current layer and current layer.
+                        //
+                        if (l < outputlayer && t > 0) {
+                            // System.out.println("layer:" + l);
+                            // System.out.println("t:" + t);
+                            // System.out.println("j:" + j);
+                            // System.out.println("h:" + h);
+                            // System.out.println("delta:" + this.delta[l][j][t]);
+                            // System.out.println("act:" + this.act[l][h][t - 1]);
+
+                            this.dweights[l][l][h][j] += (this.act[l][h][t - 1] * this.delta[l][j][t]);
+                        }
+                    }
+
+                    //
+                    // compute weights derivatives between bias and current layer.
+                    //
+                    this.dweights[l-1][l][prelayersize][j] +=  this.delta[l][j][t];
+                }
+            }
+        }
     }
-    
+
     /**
      * Initializes the weights randomly and normal distributed with
      * std. dev. 0.1.
@@ -445,7 +488,7 @@ public class RecurrentNeuralNetwork {
     public double trainStochastic(
         final Random rnd, 
         final double[][][] input, 
-        final double target[][][],
+        final double[][][] target,
         final double epochs,
         final double learningrate,
         final double momentumrate,
@@ -472,12 +515,35 @@ public class RecurrentNeuralNetwork {
         // epoch loop.
         //
         for (int i = 0; i < epochs; i++) {
+
+            // Reset the deltas and activities from previous epoch
+            this.reset();
             //
             // shuffle indices.
             //
             Tools.shuffle(indices, rnd);
             //
             double errorsum = 0.0;
+
+            for (int j = 0; j < input.length; j++) {
+
+                // Forwardpass
+                double[][] output = forwardPass(input[indices[j]]);
+
+                // Calculate error
+                errorsum += RMSE(output, target[indices[j]]);
+
+                // Backpropagate errors through the network
+                backwardPass(target[indices[j]]);
+                this.readDWeights(dweights);
+
+                // Update weights
+                for (int u = 0; u < this.weightsnum; u++) {
+                    weightsupdate[u] = -learningrate * dweights[u] + momentumrate * weightsupdate[u];
+                    weights[u] += weightsupdate[u];
+                }
+                writeWeights(weights);
+            }
             //
             // train all samples in online manner, i.e. iterate over all samples
             // while considering the shuffled order and update the weights 
