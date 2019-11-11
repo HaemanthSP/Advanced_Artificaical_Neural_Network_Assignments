@@ -31,6 +31,10 @@ public class RecurrentNeuralNetwork {
     private int bufferlength    = 0;
     private int lastinputlength = 0;
     
+    public void debugPrint() {
+      System.out.println("weights[1][2] = " + Arrays.deepToString(weights[1][2]));
+    }
+    
     private static int[] join(final int i1, final int i2, final int ...in) {
         final int[] result = new int[2 + in.length];
         //
@@ -154,7 +158,19 @@ public class RecurrentNeuralNetwork {
                 }
             }
         }
-        //
+        for (int l1 = 0; l1 < this.dweights.length; l1++) {
+            for (int l2 = 0; l2 < this.dweights[l1].length; l2++) {
+                double[][] wll = this.dweights[l1][l2];
+                if (wll != null) {
+                    for (int i = 0; i < wll.length; i++) {
+                        for (int j = 0; j < wll[i].length; j++) {
+                            wll[i][j] = 0.0;
+                        }
+                    }
+                }
+            }
+        }
+        
         this.lastinputlength = 0;
     }
 
@@ -327,7 +343,7 @@ public class RecurrentNeuralNetwork {
             // FIXME: Doubt | difference between t_target and t ? | So the steps and target could be of different size?
             if (t_target >= 0) {
                 for (int j = 0; j < this.delta[outputlayer].length; j++) {
-                    this.bwbuffer[outputlayer][j][t] = (target[t_target][j] - this.act[outputlayer][j][t]);
+                    this.bwbuffer[outputlayer][j][t] = (this.act[outputlayer][j][t] - target[t_target][j]);
 
                     // delata is same as bwbuffer for output. Because of the linear activation for the output layer.
                     this.delta[outputlayer][j][t] = this.bwbuffer[outputlayer][j][t];
@@ -400,7 +416,7 @@ public class RecurrentNeuralNetwork {
                     //
                     // compute weights derivatives between bias and current layer.
                     //
-                    this.dweights[l-1][l][prelayersize][j] +=  this.delta[l][j][t];
+                    this.dweights[l-1][l][prelayersize][j] += this.delta[l][j][t];
                 }
             }
         }
@@ -518,7 +534,7 @@ public class RecurrentNeuralNetwork {
         //
         for (int i = 0; i < epochs; i++) {
 
-            // Reset the deltas and activities from previous epoch
+            
             this.reset();
             //
             // shuffle indices.
@@ -528,7 +544,8 @@ public class RecurrentNeuralNetwork {
             double errorsum = 0.0;
 
             for (int j = 0; j < input.length; j++) {
-
+                // Reset deltas, activities and derivatives from previous example
+                this.reset();
                 // Forwardpass
                 double[][] output = forwardPass(input[indices[j]]);
 
@@ -555,7 +572,10 @@ public class RecurrentNeuralNetwork {
             // ...
         
             error = errorsum / (double)(input.length);
-            if (listener != null) listener.afterEpoch(i + 1, error);
+            if (listener != null && i % 1000 == 0) {
+              listener.afterEpoch(i + 1, error);
+              //debugPrint();
+            }
         }
         //
         return error;
