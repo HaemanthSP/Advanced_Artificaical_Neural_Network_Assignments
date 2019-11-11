@@ -1,5 +1,6 @@
 package de.cogmod.anns.exercisesheet01;
 
+import java.util.Arrays;
 import java.util.Random;
 
 import de.cogmod.anns.exercisesheet01.misc.LearningListener;
@@ -210,7 +211,8 @@ public class RecurrentNeuralNetwork {
             //
             // store input.
             //
-            assert(input.length == this.inputsize);
+            //System.out.println(Arrays.toString(input[0]));
+            assert(input[t].length == this.inputsize);
             for (int i = 0; i < input[t].length; i++) {
                 this.act[0][i][t] = input[t][i];
             }
@@ -575,7 +577,7 @@ public class RecurrentNeuralNetwork {
         for (int t = 0; t < length; t++) {
             assert(output[t].length > 0);
             assert(target[t].length > 0);
-            assert(target[t].length == output.length);
+            assert(target[t].length == output[t].length);
             //
             for (int i = 0; i < target[t].length; i++) {
                 final double e = output[t][i] - target[t][i];
