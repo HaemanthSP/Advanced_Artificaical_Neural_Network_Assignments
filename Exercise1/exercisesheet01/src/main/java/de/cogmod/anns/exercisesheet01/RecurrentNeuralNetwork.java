@@ -608,6 +608,55 @@ public class RecurrentNeuralNetwork {
         //
         return Math.sqrt(error / (double)(ctr));
     }
-    
-    
+
+    // --------------------------------------------
+    // only works for one hidden layer
+    // --------------------------------------------
+    public void writeState(final double[] state) {
+      for (int i = 0; i < state.length; i++) {
+        this.act[1][i][0] = state[i];
+      }
+    }
+
+    private void readDState(final double[] dstate) {
+      for (int i = 0; i < dstate.length; i++) {
+        dstate[i] = 0.0;
+        for (int j = 0; j < dstate.length; j++) {
+          dstate[i] += this.weights[1][1][i][j] * this.delta[1][j][0];
+        }
+      }
+    }
+
+    public double[] forceTrajectoryByInitialization(
+      final double[][] trajectory,
+      final double epochs,
+      final double learningrate,
+      final double momentumrate
+    ) {
+      final double[][] input = new double[trajectory.length][this.layer[0]];
+      Random rnd = new Random(100L);
+      this.rebufferOnDemand(trajectory.length);
+      final double[] state = new double[this.layer[1]];
+      final double[] stateupdate = new double[this.layer[1]];
+      final double[] dstate = new double[this.layer[1]];
+      for (int i = 0; i < state.length; i++) {
+        state[i] = rnd.nextGaussian() * 0.1;
+      }
+      for (int epoch = 0; epoch < epochs; epoch++) {
+        this.reset();
+        this.writeState(state);
+        double[][] output = forwardPass(input);
+        if (epoch % 1000 == 0) {
+          double rmse = RMSE(output, trajectory);
+          System.out.println("epoch " + epoch + " rmse " + rmse);
+        }
+        this.backwardPass(trajectory);
+        this.readDState(dstate);
+        for (int i = 0; i < dstate.length; ++i) {
+          stateupdate[i] = -learningrate * dstate[i] + momentumrate * stateupdate[i];
+          state[i] += stateupdate[i];
+        }
+      }
+      return state;
+    }
 }

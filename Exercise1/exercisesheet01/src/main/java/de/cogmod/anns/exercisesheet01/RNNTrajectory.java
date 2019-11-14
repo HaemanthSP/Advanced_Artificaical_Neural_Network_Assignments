@@ -65,7 +65,7 @@ public class RNNTrajectory {
         // be deactivated using net.setBias(layer, false),
         // where layer gives the layer index (1 = is the first hidden layer).
         //
-        final RecurrentNeuralNetwork net = new RecurrentNeuralNetwork(1, 8, 2);
+        final RecurrentNeuralNetwork net = new RecurrentNeuralNetwork(1, 16, 2);
         //
         // we disable all biases.
         //
@@ -152,10 +152,17 @@ public class RNNTrajectory {
                     double start_y =
                       - (double)(e.getY() - img.getHeight() / 2) / (double)330;
                     gen.reset(start_x, start_y);
+                    final double[][] desired_trajectory = generateTrajectory(
+                      gen, 100
+                    );
+                    gen.reset(start_x, start_y);
+                    final double[] state = net.forceTrajectoryByInitialization(
+                      desired_trajectory, 2001, 0.00002, 0.95
+                    );
                     net.reset();
-                    //
+                    net.writeState(state);
                     imggfx.clearRect(0, 0, img.getWidth(), img.getHeight());
-                    timestep[0] = 0;
+                    timestep[0] = 1;
                 }
             }
         });
@@ -196,7 +203,7 @@ public class RNNTrajectory {
                     final double genx = genout[0];
                     final double geny = genout[1];
                     //
-                    if (timestep[0] > 0) {
+                    if (timestep[0] > 1) {
                         //
                         final int w = img.getWidth();
                         final int h = img.getHeight();
