@@ -268,7 +268,6 @@ public class RecurrentNeuralNetwork {
                         //
                         // integrate recurrent input.
                         //
-                        // Fixme: Doubt: when t == 0 | activation at layer l is empty | Its fine because of the zero initialization
                         for (int i = 0; i < layersize; i++) {
                             netjt += this.act[l][i][prevt] * fb_weights[i][j];
                         }
@@ -340,7 +339,6 @@ public class RecurrentNeuralNetwork {
             // store into "back-flowing" inputs (deltas).
             //
 
-            // FIXME: Doubt | difference between t_target and t ? | So the steps and target could be of different size?
             if (t_target >= 0) {
                 for (int j = 0; j < this.delta[outputlayer].length; j++) {
                     this.bwbuffer[outputlayer][j][t] = (this.act[outputlayer][j][t] - target[t_target][j]);
