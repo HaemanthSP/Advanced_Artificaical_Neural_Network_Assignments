@@ -657,4 +657,8 @@ public class RecurrentNeuralNetwork {
       }
       return state;
     }
+
+    public void printDeltas() {
+      System.out.println(Arrays.deepToString(this.delta[1]));
+    }
 }
