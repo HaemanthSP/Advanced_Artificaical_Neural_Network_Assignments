@@ -36,13 +36,9 @@ public class RNNTrajectory {
         final int timesteps
     ) {
         final double[][] result = new double[timesteps][];
-        //
-        gen.reset();
-        //
         for (int t = 0; t < timesteps; t++) {
             result[t] = gen.next();
         }
-        //
         return result;
     }
     
@@ -53,6 +49,7 @@ public class RNNTrajectory {
         final TrajectoryGenerator gen = new Spiral();
         final int trainlength         = 100;
         // 
+        gen.reset();
         final double[][] trainseq = generateTrajectory(
             gen, trainlength
         );
@@ -68,7 +65,7 @@ public class RNNTrajectory {
         // be deactivated using net.setBias(layer, false),
         // where layer gives the layer index (1 = is the first hidden layer).
         //
-        final RecurrentNeuralNetwork net = new RecurrentNeuralNetwork(1, 16, 2);
+        final RecurrentNeuralNetwork net = new RecurrentNeuralNetwork(1, 8, 2);
         //
         // we disable all biases.
         //
@@ -150,7 +147,11 @@ public class RNNTrajectory {
             public void mousePressed(MouseEvent e) {
                 super.mousePressed(e);
                 synchronized (gen) {
-                    gen.reset();
+                    double start_x =
+                      (double)(e.getX() - img.getWidth() / 2) / (double)330;
+                    double start_y =
+                      - (double)(e.getY() - img.getHeight() / 2) / (double)330;
+                    gen.reset(start_x, start_y);
                     net.reset();
                     //
                     imggfx.clearRect(0, 0, img.getWidth(), img.getHeight());
