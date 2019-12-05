@@ -1,5 +1,5 @@
 package de.cogmod.anns.spacecombat.rnn;
-
+import static de.cogmod.anns.spacecombat.rnn.ReservoirTools.*;
 
 /**
  * @author Sebastian Otte
@@ -104,6 +104,49 @@ public class EchoStateNetwork extends RecurrentNeuralNetwork {
         //
         // TODO: implement ESN training algorithm here. 
         //
+        // Washout 1
+        for (int i = 0; i < washout; i++) {
+            forwardPassOscillator()
+            teacherForcing(sequence[i]);
+        }
+
+        // Training
+        for (int i = washout; i < training; i++) {
+            // Forward pass (feeds the output of previous state as input)
+            double[] output = forwardPassOscillator();
+            System.out.println();
+            System.out.println("Training sequence", i)
+            System.out.println("Output");
+            System.out.println(matrixAsString(output, 2));
+            System.out.println();
+            System.out.println("Expected Output");
+            System.out.println(matrixAsString(sequence[i], 2));
+
+            // Compute the Wout that could project the reservoir state to output
+            // Compute pseudo inverse
+            final double[][] reservoirAct = this.getAct()[1];
+            solveSvd(reservoirAct, sequence, this.outputweights);
+        }
+
+        // Washout 2
+        for (int i = 0; i < washout; i++) {
+            forwardPassOscillator()
+            teacherForcing(sequence[i]);
+        }
+
+        // Validation
+        for (int i = washout; i < training; i++) {
+            // Forward pass (feeds the output of previous state as input)
+            double[] output = forwardPassOscillator();
+            System.out.println();
+            System.out.println("Training sequence", i)
+            System.out.println("Output");
+            System.out.println(matrixAsString(output, 2));
+            System.out.println();
+            System.out.println("Expected Output");
+            System.out.println(matrixAsString(sequence[i], 2));
+        }
+
         return 0.0; // error.
     }
     
