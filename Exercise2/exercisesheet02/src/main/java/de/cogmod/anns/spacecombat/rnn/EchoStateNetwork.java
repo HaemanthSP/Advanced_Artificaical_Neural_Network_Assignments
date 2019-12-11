@@ -1,4 +1,5 @@
 package de.cogmod.anns.spacecombat.rnn;
+
 import static de.cogmod.anns.spacecombat.rnn.ReservoirTools.*;
 
 /**
@@ -9,7 +10,12 @@ public class EchoStateNetwork extends RecurrentNeuralNetwork {
     private double[][] inputweights;
     private double[][] reservoirweights;
     private double[][] outputweights;
-    
+    public int reservoirsize;
+
+    public static double sq(final double x) {
+        return x * x;
+    }
+
     public double[][] getInputWeights() {
         return this.inputweights;
     }
@@ -28,6 +34,7 @@ public class EchoStateNetwork extends RecurrentNeuralNetwork {
         final int output
     ) {
         super(input, reservoirsize, output);
+        this.reservoirsize = reservoirsize;
         //
         this.inputweights     = this.getWeights()[0][1];
         this.reservoirweights = this.getWeights()[1][1];
@@ -91,63 +98,72 @@ public class EchoStateNetwork extends RecurrentNeuralNetwork {
             act[outputlayer][i][t] = target[i];
         }
     }
-    
+
     /**
-     * ESN training algorithm. 
+     * Train output weights of ESN. Used as a fitness measure
+     * inside the outer loop of Differential Evolution.
      */
     public double trainESN(
-        final double[][] sequence,
-        final int washout,
-        final int training,
-        final int test
+        final double[][] washout,
+        final double[][] train
     ) {
-        //
-        // TODO: implement ESN training algorithm here. 
-        //
-        // Washout 1
-        for (int i = 0; i < washout; i++) {
-            forwardPassOscillator()
-            teacherForcing(sequence[i]);
+        for (int t = 0; t < washout.length; t++) {
+            forwardPassOscillator();
+            teacherForcing(washout[t]);
         }
 
-        // Training
-        for (int i = washout; i < training; i++) {
-            // Forward pass (feeds the output of previous state as input)
+        final double[][] reservoirAct = new double[train.length][this.reservoirsize + 1];
+
+        for (int t = 0; t < train.length; t++) {
+            forwardPassOscillator();
+            for (int i = 0; i < this.reservoirsize; ++i) {
+                reservoirAct[t][i] = this.getAct()[1][i][0];
+            }
+        }
+        //System.out.print("cols(this.outputweights) = ");
+        //System.out.println(cols(this.outputweights));
+        //System.out.print("rows(this.outputweights) = ");
+        //System.out.println(rows(this.outputweights));
+        solveSVD(reservoirAct, train, this.outputweights);
+        this.reset();
+
+        for (int t = 0; t < washout.length; t++) {
+            forwardPassOscillator();
+            teacherForcing(washout[t]);
+        }
+
+        double mse = 0.0;
+
+        for (int t = 0; t < train.length; ++t) {
             double[] output = forwardPassOscillator();
-            System.out.println();
-            System.out.println("Training sequence", i)
-            System.out.println("Output");
-            System.out.println(matrixAsString(output, 2));
-            System.out.println();
-            System.out.println("Expected Output");
-            System.out.println(matrixAsString(sequence[i], 2));
-
-            // Compute the Wout that could project the reservoir state to output
-            // Compute pseudo inverse
-            final double[][] reservoirAct = this.getAct()[1];
-            solveSvd(reservoirAct, sequence, this.outputweights);
+            for (int i = 0; i < output.length; ++i) {
+                mse += sq(train[t][i] - output[i]);
+            }
         }
 
-        // Washout 2
-        for (int i = 0; i < washout; i++) {
-            forwardPassOscillator()
-            teacherForcing(sequence[i]);
+        mse /= (double)train.length;
+
+        return Math.sqrt(mse);
+    }
+
+    public double evaluateESN(final double[][] washout, final double[][] eval) {
+        for (int t = 0; t < washout.length; ++t) {
+            forwardPassOscillator();
+            teacherForcing(washout[t]);
         }
 
-        // Validation
-        for (int i = washout; i < training; i++) {
-            // Forward pass (feeds the output of previous state as input)
+        double mse = 0.0;
+
+        for (int t = 0; t < eval.length; ++t) {
             double[] output = forwardPassOscillator();
-            System.out.println();
-            System.out.println("Training sequence", i)
-            System.out.println("Output");
-            System.out.println(matrixAsString(output, 2));
-            System.out.println();
-            System.out.println("Expected Output");
-            System.out.println(matrixAsString(sequence[i], 2));
+            for (int i = 0; i < output.length; ++i) {
+                mse += sq(eval[t][i] - output[i]);
+            }
         }
 
-        return 0.0; // error.
+        mse /= (double)eval.length;
+
+        return Math.sqrt(mse);
     }
     
 }

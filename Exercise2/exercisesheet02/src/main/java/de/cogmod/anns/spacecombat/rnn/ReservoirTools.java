@@ -59,6 +59,9 @@ public class ReservoirTools {
      * a singular value decomposition of B. The result is stored in X.
      */
     public static boolean solveSVD(final double[][] A, final double[][] B, final double[][] X) {
+        assert (cols(A) == rows(X));
+        assert (rows(A) == rows(B));
+        assert (cols(B) == cols(X));
         //
         // convert double array to ejml matrices.
         //

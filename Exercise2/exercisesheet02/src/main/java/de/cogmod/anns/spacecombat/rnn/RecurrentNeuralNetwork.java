@@ -219,7 +219,7 @@ public class RecurrentNeuralNetwork {
             //
             // store input.
             //
-            assert(input.length == this.inputsize);
+            assert(input[t].length == this.inputsize);
             for (int i = 0; i < input[t].length; i++) {
                 this.act[0][i][t] = input[t][i];
             }
