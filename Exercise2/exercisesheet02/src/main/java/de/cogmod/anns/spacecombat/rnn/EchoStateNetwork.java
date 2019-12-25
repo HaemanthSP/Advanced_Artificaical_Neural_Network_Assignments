@@ -1,5 +1,7 @@
 package de.cogmod.anns.spacecombat.rnn;
 
+import java.util.Arrays;
+
 import static de.cogmod.anns.spacecombat.rnn.ReservoirTools.*;
 
 /**
@@ -92,7 +94,7 @@ public class EchoStateNetwork extends RecurrentNeuralNetwork {
         //
         final int n = act[outputlayer].length;
         //
-        final int t = this.getLastInputLength() - 1;
+        final int t = Math.max(0, this.getLastInputLength() - 1);
         //
         for (int i = 0; i < n; i++) {
             act[outputlayer][i][t] = target[i];
@@ -107,6 +109,7 @@ public class EchoStateNetwork extends RecurrentNeuralNetwork {
         final double[][] washout,
         final double[][] train
     ) {
+        this.reset();
         for (int t = 0; t < washout.length; t++) {
             forwardPassOscillator();
             teacherForcing(washout[t]);
@@ -124,7 +127,14 @@ public class EchoStateNetwork extends RecurrentNeuralNetwork {
         //System.out.println(cols(this.outputweights));
         //System.out.print("rows(this.outputweights) = ");
         //System.out.println(rows(this.outputweights));
-        solveSVD(reservoirAct, train, this.outputweights);
+        final double[][] copyTrain = new double[train.length][train[0].length];
+        for (int t = 0; t < train.length; ++t) {
+            for (int i = 0; i < train[0].length; ++i) {
+                copyTrain[t][i] = train[t][i];
+            }
+        }
+
+        solveSVD(reservoirAct, copyTrain, this.outputweights);
         this.reset();
 
         for (int t = 0; t < washout.length; t++) {
@@ -146,7 +156,8 @@ public class EchoStateNetwork extends RecurrentNeuralNetwork {
         return Math.sqrt(mse);
     }
 
-    public double evaluateESN(final double[][] washout, final double[][] eval) {
+    public double evaluateESN(final double[][] washout, final double[][] eval, String name) {
+        this.reset();
         for (int t = 0; t < washout.length; ++t) {
             forwardPassOscillator();
             teacherForcing(washout[t]);
@@ -154,16 +165,36 @@ public class EchoStateNetwork extends RecurrentNeuralNetwork {
 
         double mse = 0.0;
 
+        System.out.println("import matplotlib.pyplot as plt");
+        System.out.println("output = [");
         for (int t = 0; t < eval.length; ++t) {
             double[] output = forwardPassOscillator();
+            System.out.printf("%s,\n", Arrays.toString(output));
             for (int i = 0; i < output.length; ++i) {
                 mse += sq(eval[t][i] - output[i]);
             }
         }
+        System.out.println("]");
+        System.out.println("eval = [");
+        for (int t = 0; t < eval.length; ++t) {
+            System.out.printf("%s,\n", Arrays.toString(eval[t]));
+        }
+        System.out.println("]");
+        System.out.println("plt.plot([i[0] for i in output]); plt.plot([i[0] for i in eval]);");
+        System.out.printf("plt.savefig('%s_x.png'); plt.clf();\n", name);
+        System.out.println("plt.plot([i[1] for i in output]); plt.plot([i[1] for i in eval]);");
+        System.out.printf("plt.savefig('%s_y.png'); plt.clf();\n", name);
+        System.out.println("plt.plot([i[2] for i in output]); plt.plot([i[2] for i in eval]);");
+        System.out.printf("plt.savefig('%s_z.png'); plt.clf();\n", name);
 
         mse /= (double)eval.length;
 
         return Math.sqrt(mse);
     }
     
+    public void printWeights() {
+        System.out.printf("double[][] inputweights = %s;\n", Arrays.deepToString(this.inputweights));
+        System.out.printf("double[][] outputweights = %s;\n", Arrays.deepToString(this.outputweights));
+        System.out.printf("double[][] reservoirweights = %s;\n", Arrays.deepToString(this.reservoirweights));
+    }
 }

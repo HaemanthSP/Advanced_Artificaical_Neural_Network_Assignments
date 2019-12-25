@@ -42,15 +42,15 @@ public class EnemySpaceShip {
     public boolean isDestroyed() {
         return this.destroyed;
     }
-    
+
     public void reset() {
+        final Random rnd = new Random(System.currentTimeMillis());
+        this.reset(rnd);
+    }
+
+    public void reset(final Random rnd) {
         this.t = 0L;
         this.destroyed = false;
-        //
-        final Random rnd = new Random(System.currentTimeMillis());
-        //
-        // randomize phases.
-        //
         for (int i = 0; i < this.phasesx.length; i++) {
             this.phasesx[i] = Math.PI * rnd.nextDouble() * 2.0;
         }
@@ -60,10 +60,9 @@ public class EnemySpaceShip {
         for (int i = 0; i < this.phasesz.length; i++) {
             this.phasesz[i] = Math.PI * rnd.nextDouble() * 2.0;
         }
-        //
         this.updatePosition();
     }
-    
+
     public EnemySpaceShip() {
         //
         for (int i = 0; i < this.amplitudesx.length; i++) {
