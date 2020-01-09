@@ -14,7 +14,7 @@ CONFIG["architecture_name"] = "architecture_0"
 CONFIG["model_name"] = "alpha102"
 
 CONFIG["device"] = "CPU"  # can be "CPU" or "GPU"
-CONFIG["mode"] = 1  # 1 to train the model, 2 to test the model
+CONFIG["mode"] = 2  # 1 to train the model, 2 to test the model
 
 
 #
@@ -25,7 +25,7 @@ CONFIG["save_model"] = True
 CONFIG["continue_training"] = False
 
 CONFIG["epochs"] = 100
-CONFIG["seq_len"] = 40
+CONFIG["seq_len"] = 80
 CONFIG["learning_rate"] = 0.001
 
 #

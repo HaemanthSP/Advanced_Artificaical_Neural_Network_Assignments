@@ -59,7 +59,9 @@ def run_testing(cfg):
     while x == u'1':
 
         error = 0.0
+        std = 0.0
         for i in range(10):
+            print("Sequence %s" % (i+1))
 
             time_start = time.time()
 
@@ -74,7 +76,7 @@ def run_testing(cfg):
             )
 
             forward_pass_duration = time.time() - time_start
-            print("\tForward pass took:", forward_pass_duration, "seconds.")
+            print("Forward pass took:", forward_pass_duration, "seconds.")
 
             net_outputs = net_outputs.detach().numpy()
 
@@ -91,19 +93,23 @@ def run_testing(cfg):
                         make_legend=make_legend
                     )
             fig.suptitle('Model ' + cfg["model_name"], fontsize=12)
-            # plt.show()
+            plt.show()
 
             # Visualize and animate the propagation of the 2d wave
             anim = helpers.animate_2d_wave(net_label, net_outputs, params)
             # plt.show()
 
             # Compute the error for only the closed loop steps
-            mse = np.mean(np.square(net_outputs[:,:,15:,:,:] - net_label[:,:,15:,:,:]))
-            print("Error on sequence %d: %s" % (i+1, mse))
+            diff = np.square(net_outputs[:,:,15:,:,:] - net_label[:,:,15:,:,:])
+            mse = np.mean(diff)
+            print("Error: %s" % (mse))
             error += mse
+            std += np.std(diff)
+
             curr_idx += 1
 
         print("Average error over 10 sequences: %s" % (error / 10))
+        print("Average Standard deviation over 10 sequences: %s" % (std / 10))
         # Retrieve user input to continue or quit the testing
         x = input("Press 1 to see another example, anything else to quit.")
 
