@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import network_architecture.net_variables as net_variables
 import network_architecture.net_model as net_model
 import helper_functions as helpers
+import numpy as np
 
 
 def run_testing(cfg):
@@ -57,47 +58,53 @@ def run_testing(cfg):
     curr_idx = 0
     while x == u'1':
 
-        time_start = time.time()
+        error = 0.0
+        for i in range(10):
 
-        # Evaluate the network for the given test data
-        _, net_input, net_label, net_outputs = helpers.evaluate(
-            net=net,
-            data_filenames=test_data_filenames,
-            params=params,
-            tensors=tensors,
-            _iter=curr_idx,
-            testing=True
-        )
+            time_start = time.time()
 
-        forward_pass_duration = time.time() - time_start
-        print("\tForward pass took:", forward_pass_duration, "seconds.")
+            # Evaluate the network for the given test data
+            _, net_input, net_label, net_outputs = helpers.evaluate(
+                net=net,
+                data_filenames=test_data_filenames,
+                params=params,
+                tensors=tensors,
+                _iter=curr_idx,
+                testing=True
+            )
 
-        net_outputs = net_outputs.detach().numpy()
+            forward_pass_duration = time.time() - time_start
+            print("\tForward pass took:", forward_pass_duration, "seconds.")
 
-        # Plot the wave activity
-        fig, axes = plt.subplots(2, 2, figsize=[10, 8], sharex="all")
-        for i in range(2):
-            for j in range(2):
-                make_legend = True if (i == 0 and j == 0) else False
-                helpers.plot_kernel_activity(
-                    ax=axes[i, j],
-                    label=net_label,
-                    net_out=net_outputs,
-                    params=params,
-                    make_legend=make_legend
-                )
-        fig.suptitle('Model ' + cfg["model_name"], fontsize=12)
-        plt.show()
+            net_outputs = net_outputs.detach().numpy()
 
-        # Visualize and animate the propagation of the 2d wave
-        anim = helpers.animate_2d_wave(net_label, net_outputs, params)
-        plt.show()
+            # Plot the wave activity
+            fig, axes = plt.subplots(2, 2, figsize=[10, 8], sharex="all")
+            for i in range(2):
+                for j in range(2):
+                    make_legend = True if (i == 0 and j == 0) else False
+                    helpers.plot_kernel_activity(
+                        ax=axes[i, j],
+                        label=net_label,
+                        net_out=net_outputs,
+                        params=params,
+                        make_legend=make_legend
+                    )
+            fig.suptitle('Model ' + cfg["model_name"], fontsize=12)
+            # plt.show()
 
-        # TODO: compute error between network output and network label in closed
-        #       loop here
+            # Visualize and animate the propagation of the 2d wave
+            anim = helpers.animate_2d_wave(net_label, net_outputs, params)
+            # plt.show()
 
+            # Compute the error for only the closed loop steps
+            mse = np.mean(np.square(net_outputs[:,:,15:,:,:] - net_label[:,:,15:,:,:]))
+            print("Error on sequence %d: %s" % (i+1, mse))
+            error += mse
+            curr_idx += 1
+
+        print("Average error over 10 sequences: %s" % (error / 10))
         # Retrieve user input to continue or quit the testing
         x = input("Press 1 to see another example, anything else to quit.")
-        curr_idx += 1
 
     print('Done')

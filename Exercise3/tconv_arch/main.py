@@ -11,10 +11,10 @@ CONFIG = dict()
 CONFIG["source_path"] = os.path.realpath("../")
 
 CONFIG["architecture_name"] = "architecture_0"
-CONFIG["model_name"] = "test_model"
+CONFIG["model_name"] = "alpha102"
 
 CONFIG["device"] = "CPU"  # can be "CPU" or "GPU"
-CONFIG["mode"] = 2  # 1 to train the model, 2 to test the model
+CONFIG["mode"] = 1  # 1 to train the model, 2 to test the model
 
 
 #
@@ -31,8 +31,8 @@ CONFIG["learning_rate"] = 0.001
 #
 # Testing parameters
 
-CONFIG["teacher_forcing_steps"] = 20
-CONFIG["closed_loop_steps"] = 100
+CONFIG["teacher_forcing_steps"] = 15
+CONFIG["closed_loop_steps"] = 65
 
 #
 # Run configuration
