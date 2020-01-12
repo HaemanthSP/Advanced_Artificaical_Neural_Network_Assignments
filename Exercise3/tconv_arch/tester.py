@@ -60,8 +60,8 @@ def run_testing(cfg):
 
         error = 0.0
         std = 0.0
-        for i in range(10):
-            print("Sequence %s" % (i+1))
+        for idx in range(10):
+            print("Sequence %s" % (idx+1))
 
             time_start = time.time()
 
